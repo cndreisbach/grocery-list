@@ -19,7 +19,7 @@ FROM oven/bun:1
 WORKDIR /app
 
 COPY --from=build /app/package.json ./
-COPY --from=build /app/bun.lockb* ./
+COPY --from=build /app/bun.lock ./
 RUN bun install --frozen-lockfile --production
 
 COPY --from=build /app/src ./src
