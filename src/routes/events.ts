@@ -10,6 +10,7 @@ app.get('/:id/events', (c) => {
   const list = db.prepare('SELECT id FROM lists WHERE id = ?').get(listId)
   if (!list) return c.json({ error: 'List not found' }, 404)
 
+  c.header('X-Accel-Buffering', 'no')
   return streamSSE(c, async (stream) => {
     const unsubscribe = subscribe(listId, async ({ type, payload }) => {
       await stream.writeSSE({
