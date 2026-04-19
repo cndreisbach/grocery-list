@@ -2,11 +2,11 @@ FROM oven/bun:1 AS build
 WORKDIR /app
 
 # Install server deps
-COPY package.json bun.lockb* ./
+COPY package.json bun.lock ./
 RUN bun install --frozen-lockfile
 
 # Install client deps and build
-COPY client/package.json client/bun.lockb* ./client/
+COPY client/package.json client/bun.lock ./client/
 RUN cd client && bun install --frozen-lockfile
 COPY client ./client
 RUN cd client && bun run build
