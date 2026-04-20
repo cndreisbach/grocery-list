@@ -17,6 +17,12 @@ const SYNONYMS: Record<string, string> = {
   'oj': 'orange juice',
 }
 
+interface CandidateMatch {
+  area: StoreArea
+  tokenCount: number
+  phraseLength: number
+}
+
 export function normalizeItemName(name: string): string {
   let n = name.toLowerCase().trim()
 
@@ -30,6 +36,80 @@ export function normalizeItemName(name: string): string {
   if (n.endsWith('s') && !n.endsWith('ss') && n.length > 3) return n.slice(0, -1)
 
   return n
+}
+
+function tokenize(name: string): string[] {
+  return normalizeItemName(name).split(/\s+/).filter(Boolean)
+}
+
+function containsPhrase(inputTokens: string[], candidateTokens: string[]): boolean {
+  if (candidateTokens.length === 0 || candidateTokens.length > inputTokens.length) return false
+
+  for (let start = 0; start <= inputTokens.length - candidateTokens.length; start++) {
+    let matches = true
+    for (let i = 0; i < candidateTokens.length; i++) {
+      if (inputTokens[start + i] !== candidateTokens[i]) {
+        matches = false
+        break
+      }
+    }
+    if (matches) return true
+  }
+
+  return false
+}
+
+function isBetterMatch(candidate: CandidateMatch, current: CandidateMatch | null): boolean {
+  if (!current) return true
+  if (candidate.tokenCount !== current.tokenCount) return candidate.tokenCount > current.tokenCount
+  if (candidate.phraseLength !== current.phraseLength) return candidate.phraseLength > current.phraseLength
+  return false
+}
+
+function findContainedHistoryMatch(inputTokens: string[], history: HistoryEntry[]): StoreArea | null {
+  let bestMatch: CandidateMatch | null = null
+
+  for (const entry of history) {
+    const normalizedName = normalizeItemName(entry.name)
+    const candidateTokens = tokenize(entry.name)
+    if (!containsPhrase(inputTokens, candidateTokens)) continue
+
+    const candidate = {
+      area: entry.store_area,
+      tokenCount: candidateTokens.length,
+      phraseLength: normalizedName.length,
+    }
+
+    if (isBetterMatch(candidate, bestMatch)) {
+      bestMatch = candidate
+    }
+  }
+
+  return bestMatch?.area ?? null
+}
+
+function findContainedDictionaryMatch(inputTokens: string[]): StoreArea | null {
+  let bestMatch: CandidateMatch | null = null
+
+  for (const [key, area] of Object.entries(dict)) {
+    const candidateTokens = tokenize(key)
+    const matches =
+      containsPhrase(inputTokens, candidateTokens) ||
+      (candidateTokens.length > 1 && containsPhrase(candidateTokens, inputTokens))
+    if (!matches) continue
+
+    const candidate = {
+      area,
+      tokenCount: candidateTokens.length,
+      phraseLength: key.length,
+    }
+
+    if (isBetterMatch(candidate, bestMatch)) {
+      bestMatch = candidate
+    }
+  }
+
+  return bestMatch?.area ?? null
 }
 
 function levenshtein(a: string, b: string): number {
@@ -51,6 +131,7 @@ function levenshtein(a: string, b: string): number {
 
 export function classifyItem(name: string, history: HistoryEntry[] = []): StoreArea {
   const normalized = normalizeItemName(name)
+  const inputTokens = tokenize(name)
 
   // 1. History match (exact normalized, case-insensitive)
   const historyMatch = history.find(h => normalizeItemName(h.name) === normalized)
@@ -59,7 +140,15 @@ export function classifyItem(name: string, history: HistoryEntry[] = []): StoreA
   // 2. Exact dictionary match
   if (dict[normalized]) return dict[normalized]
 
-  // 3. Fuzzy match (Levenshtein ≤ 2) — only for inputs ≥ 4 chars to avoid noise
+  // 3. Contained history phrase/token match
+  const historyContainedMatch = findContainedHistoryMatch(inputTokens, history)
+  if (historyContainedMatch) return historyContainedMatch
+
+  // 4. Contained dictionary phrase/token match
+  const dictContainedMatch = findContainedDictionaryMatch(inputTokens)
+  if (dictContainedMatch) return dictContainedMatch
+
+  // 5. Fuzzy match (Levenshtein ≤ 2) — only for inputs ≥ 4 chars to avoid noise
   if (normalized.length >= 4) {
     let bestArea: StoreArea | null = null
     let bestDist = Infinity

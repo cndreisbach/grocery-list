@@ -103,6 +103,16 @@ describe('classifyItem — exact matches', () => {
   }
 })
 
+describe('classifyItem — case-insensitive matching', () => {
+  test('uppercase dictionary input matches', () => expect(classifyItem('OATMEAL')).toBe('Pantry'))
+  test('mixed-case contained dictionary input matches', () =>
+    expect(classifyItem('Instant Oatmeal')).toBe('Pantry'))
+  test('mixed-case history input matches', () => {
+    const history = [{ name: 'Oat Milk', store_area: 'Beverages' as const, last_used: '' }]
+    expect(classifyItem('oAt MiLk', history)).toBe('Beverages')
+  })
+})
+
 describe('classifyItem — plurals and variants', () => {
   test('apples → Produce', () => expect(classifyItem('apples')).toBe('Produce'))
   test('strawberries → Produce', () => expect(classifyItem('strawberries')).toBe('Produce'))
@@ -114,6 +124,18 @@ describe('classifyItem — plurals and variants', () => {
   test('frozen peas → Frozen', () => expect(classifyItem('frozen peas')).toBe('Frozen'))
   test('batteries → Household', () => expect(classifyItem('batteries')).toBe('Household'))
   test('vitamins → Personal Care', () => expect(classifyItem('vitamins')).toBe('Personal Care'))
+})
+
+describe('classifyItem — contained phrase matching', () => {
+  test('instant oatmeal → Pantry', () => expect(classifyItem('instant oatmeal')).toBe('Pantry'))
+  test('chicken tenders → Meat & Seafood', () =>
+    expect(classifyItem('chicken tenders')).toBe('Meat & Seafood'))
+  test('ground beef tacos → Meat & Seafood', () =>
+    expect(classifyItem('ground beef tacos')).toBe('Meat & Seafood'))
+  test('low sodium chicken broth prefers broth over chicken → Pantry', () =>
+    expect(classifyItem('low sodium chicken broth')).toBe('Pantry'))
+  test('cheese matches a more specific dictionary phrase → Dairy', () =>
+    expect(classifyItem('cheese')).toBe('Dairy'))
 })
 
 describe('classifyItem — fuzzy matching', () => {
@@ -132,9 +154,17 @@ describe('classifyItem — synonyms', () => {
 })
 
 describe('classifyItem — history takes precedence', () => {
-  const history = [{ name: 'oat milk', store_area: 'Beverages' as const, last_used: '' }]
+  const history = [
+    { name: 'oat milk', store_area: 'Beverages' as const, last_used: '' },
+    { name: 'chicken', store_area: 'Frozen' as const, last_used: '' },
+  ]
+
   test('oat milk in history overrides dictionary', () =>
     expect(classifyItem('oat milk', history)).toBe('Beverages'))
+  test('exact history match beats contained dictionary match', () =>
+    expect(classifyItem('chicken', history)).toBe('Frozen'))
+  test('contained history match beats contained dictionary match', () =>
+    expect(classifyItem('chicken tenders', history)).toBe('Frozen'))
 })
 
 describe('classifyItem — unknown items', () => {
