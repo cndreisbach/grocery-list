@@ -4,4 +4,4 @@
 
 ## 2. Deploy and Verify
 
-- [ ] 2.1 Commit, deploy via `caprover deploy`, then test "Add to Home Screen" from a list page and confirm the shortcut opens that list
+- [x] 2.1 Commit, deploy via `caprover deploy`, then test "Add to Home Screen" from a list page and confirm the shortcut opens that list

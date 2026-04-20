@@ -24,6 +24,10 @@ export default function ListPage() {
   })
 
   useEffect(() => {
+    if (id) localStorage.setItem('lastList', id)
+  }, [id])
+
+  useEffect(() => {
     if (data?.name) setListName(data.name)
   }, [data?.name])
 
@@ -123,6 +127,14 @@ export default function ListPage() {
         <button className="header__btn" onClick={copyLink} title={copied ? 'Copied!' : 'Copy link'}>
           {copied ? '✓' : '🔗'}
         </button>
+        <Link
+          to="/"
+          className="header__btn"
+          title="New list"
+          onClick={() => localStorage.removeItem('lastList')}
+        >
+          +
+        </Link>
       </header>
 
       <div className="content">
