@@ -9,9 +9,11 @@ import AreaPicker from './AreaPicker'
 interface Props {
   item: Item
   listId: string
+  dictionary: Record<string, string>
+  areas: string[]
 }
 
-export default function ItemRow({ item, listId }: Props) {
+export default function ItemRow({ item, listId, dictionary, areas }: Props) {
   const queryClient = useQueryClient()
   const [editing, setEditing] = useState(false)
   const [editValue, setEditValue] = useState(item.name)
@@ -51,7 +53,7 @@ export default function ItemRow({ item, listId }: Props) {
     const trimmed = editValue.trim()
     if (!trimmed || trimmed === item.name) { setEditValue(item.name); return }
 
-    const store_area = item.area_overridden ? item.store_area : classifyItem(trimmed)
+    const store_area = item.area_overridden ? item.store_area : classifyItem(trimmed, dictionary)
     await api.updateItem(listId, item.id, { name: trimmed, store_area, area_overridden: item.area_overridden }).catch(console.error)
     invalidate()
   }
@@ -106,6 +108,7 @@ export default function ItemRow({ item, listId }: Props) {
       {showAreaPicker && (
         <AreaPicker
           current={item.store_area}
+          areas={areas}
           onSelect={async area => {
             setShowAreaPicker(false)
             await api.updateItem(listId, item.id, { store_area: area, area_overridden: true }).catch(console.error)

@@ -1,13 +1,15 @@
-import type { Item, StoreArea } from '../types'
+import type { Item } from '../types'
 import ItemRow from './ItemRow'
 
 interface Props {
-  area: StoreArea
+  area: string
   items: Item[]
   listId: string
+  dictionary: Record<string, string>
+  areas: string[]
 }
 
-export default function StoreAreaGroup({ area, items, listId }: Props) {
+export default function StoreAreaGroup({ area, items, listId, dictionary, areas }: Props) {
   return (
     <div className="store-group">
       <div className="store-group__header">
@@ -15,7 +17,7 @@ export default function StoreAreaGroup({ area, items, listId }: Props) {
       </div>
       <div className="store-group__items">
         {items.map(item => (
-          <ItemRow key={item.id} item={item} listId={listId} />
+          <ItemRow key={item.id} item={item} listId={listId} dictionary={dictionary} areas={areas} />
         ))}
       </div>
     </div>

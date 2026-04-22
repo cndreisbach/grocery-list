@@ -1,4 +1,4 @@
-import type { GroceryList, Item, StoreArea } from '../types'
+import type { GroceryList, Item, Store } from '../types'
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, {
@@ -34,9 +34,20 @@ export const api = {
       body: JSON.stringify({ name }),
     }),
 
+  updateListStore: (id: string, storeId: string) =>
+    request<{ id: string; store_id: string }>(`/api/lists/${id}/store`, {
+      method: 'PATCH',
+      body: JSON.stringify({ store_id: storeId }),
+    }),
+
+  getStores: () => request<Store[]>('/api/stores'),
+
+  getStoreDictionary: (storeTypeId: string) =>
+    request<Record<string, string>>(`/api/store-types/${storeTypeId}/dictionary`),
+
   addItem: (
     listId: string,
-    data: { name: string; store_area: StoreArea; area_overridden: boolean }
+    data: { name: string; store_area: string; area_overridden: boolean }
   ) =>
     request<Item>(`/api/lists/${listId}/items`, {
       method: 'POST',

@@ -1,7 +1,4 @@
-import type { StoreArea, HistoryEntry } from '../types'
-import dictionary from '../data/dictionary.json'
-
-const dict = dictionary as Record<string, StoreArea>
+import type { HistoryEntry } from '../types'
 
 const SYNONYMS: Record<string, string> = {
   pop: 'soda',
@@ -18,7 +15,7 @@ const SYNONYMS: Record<string, string> = {
 }
 
 interface CandidateMatch {
-  area: StoreArea
+  area: string
   tokenCount: number
   phraseLength: number
 }
@@ -66,7 +63,7 @@ function isBetterMatch(candidate: CandidateMatch, current: CandidateMatch | null
   return false
 }
 
-function findContainedHistoryMatch(inputTokens: string[], history: HistoryEntry[]): StoreArea | null {
+function findContainedHistoryMatch(inputTokens: string[], history: HistoryEntry[]): string | null {
   let bestMatch: CandidateMatch | null = null
 
   for (const entry of history) {
@@ -88,10 +85,10 @@ function findContainedHistoryMatch(inputTokens: string[], history: HistoryEntry[
   return bestMatch?.area ?? null
 }
 
-function findContainedDictionaryMatch(inputTokens: string[]): StoreArea | null {
+function findContainedDictionaryMatch(inputTokens: string[], dictionary: Record<string, string>): string | null {
   let bestMatch: CandidateMatch | null = null
 
-  for (const [key, area] of Object.entries(dict)) {
+  for (const [key, area] of Object.entries(dictionary)) {
     const candidateTokens = tokenize(key)
     const matches =
       containsPhrase(inputTokens, candidateTokens) ||
@@ -129,7 +126,11 @@ function levenshtein(a: string, b: string): number {
   return dp[m][n]
 }
 
-export function classifyItem(name: string, history: HistoryEntry[] = []): StoreArea {
+export function classifyItem(
+  name: string,
+  dictionary: Record<string, string>,
+  history: HistoryEntry[] = []
+): string {
   const normalized = normalizeItemName(name)
   const inputTokens = tokenize(name)
 
@@ -138,21 +139,21 @@ export function classifyItem(name: string, history: HistoryEntry[] = []): StoreA
   if (historyMatch) return historyMatch.store_area
 
   // 2. Exact dictionary match
-  if (dict[normalized]) return dict[normalized]
+  if (dictionary[normalized]) return dictionary[normalized]
 
   // 3. Contained history phrase/token match
   const historyContainedMatch = findContainedHistoryMatch(inputTokens, history)
   if (historyContainedMatch) return historyContainedMatch
 
   // 4. Contained dictionary phrase/token match
-  const dictContainedMatch = findContainedDictionaryMatch(inputTokens)
+  const dictContainedMatch = findContainedDictionaryMatch(inputTokens, dictionary)
   if (dictContainedMatch) return dictContainedMatch
 
   // 5. Fuzzy match (Levenshtein ≤ 2) — only for inputs ≥ 4 chars to avoid noise
   if (normalized.length >= 4) {
-    let bestArea: StoreArea | null = null
+    let bestArea: string | null = null
     let bestDist = Infinity
-    for (const [key, area] of Object.entries(dict)) {
+    for (const [key, area] of Object.entries(dictionary)) {
       const dist = levenshtein(normalized, key)
       if (dist < bestDist && dist <= 2) {
         bestDist = dist
@@ -167,14 +168,15 @@ export function classifyItem(name: string, history: HistoryEntry[] = []): StoreA
 
 export function getSuggestions(
   input: string,
+  dictionary: Record<string, string>,
   history: HistoryEntry[],
   maxResults = 8
-): Array<{ name: string; store_area: StoreArea }> {
+): Array<{ name: string; store_area: string }> {
   const query = input.toLowerCase().trim()
   if (!query) return []
 
   const seen = new Set<string>()
-  const results: Array<{ name: string; store_area: StoreArea; score: number }> = []
+  const results: Array<{ name: string; store_area: string; score: number }> = []
 
   // History matches (sorted by recency — history is already ordered DESC by last_used)
   for (const entry of history) {
@@ -185,7 +187,7 @@ export function getSuggestions(
   }
 
   // Dictionary matches
-  for (const [key, area] of Object.entries(dict)) {
+  for (const [key, area] of Object.entries(dictionary)) {
     if (key.startsWith(query) && !seen.has(key)) {
       seen.add(key)
       results.push({ name: key, store_area: area, score: 1 })

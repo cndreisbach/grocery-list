@@ -112,6 +112,23 @@ a {
   background: rgba(255,255,255,0.15);
 }
 
+.header__store-select {
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: var(--radius-sm);
+  color: var(--color-header-text);
+  padding: 4px 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  max-width: 120px;
+}
+
+.header__store-select option {
+  background: var(--color-primary);
+  color: var(--color-header-text);
+}
+
 .content {
   flex: 1;
   padding: 16px 16px 80px;

@@ -4,18 +4,19 @@ import { api } from '../lib/api'
 import { queueMutation } from '../lib/offlineQueue'
 import { classifyItem, getSuggestions } from '../lib/classify'
 import { useIsTouch } from '../lib/useIsTouch'
-import type { HistoryEntry, StoreArea } from '../types'
+import type { HistoryEntry } from '../types'
 
 interface Props {
   listId: string
   history: HistoryEntry[]
+  dictionary: Record<string, string>
 }
 
-export default function ItemInput({ listId, history }: Props) {
+export default function ItemInput({ listId, history, dictionary }: Props) {
   const queryClient = useQueryClient()
   const isTouch = useIsTouch()
   const [value, setValue] = useState('')
-  const [suggestions, setSuggestions] = useState<Array<{ name: string; store_area: StoreArea }>>([])
+  const [suggestions, setSuggestions] = useState<Array<{ name: string; store_area: string }>>([])
   const [activeIdx, setActiveIdx] = useState(-1)
   const inputRef = useRef<HTMLInputElement>(null)
   const keepOpenRef = useRef(false)
@@ -23,7 +24,7 @@ export default function ItemInput({ listId, history }: Props) {
   function handleChange(text: string) {
     setValue(text)
     setActiveIdx(-1)
-    setSuggestions(text ? getSuggestions(text, history) : [])
+    setSuggestions(text ? getSuggestions(text, dictionary, history) : [])
   }
 
   async function submit(name: string) {
@@ -40,7 +41,7 @@ export default function ItemInput({ listId, history }: Props) {
       }
     }
 
-    const store_area = classifyItem(trimmed, history)
+    const store_area = classifyItem(trimmed, dictionary, history)
     setValue('')
     setSuggestions([])
     setActiveIdx(-1)
@@ -96,7 +97,6 @@ export default function ItemInput({ listId, history }: Props) {
         keepOpenRef.current = true
         setActiveIdx(i => i + 1)
       } else {
-        // On last suggestion — dismiss and let Tab proceed naturally
         setSuggestions([])
         setActiveIdx(-1)
       }
@@ -110,7 +110,6 @@ export default function ItemInput({ listId, history }: Props) {
         keepOpenRef.current = true
         setActiveIdx(-1)
       }
-      // activeIdx === -1: let Shift+Tab proceed naturally
     } else if (e.key === 'Enter') {
       e.preventDefault()
       if (activeIdx >= 0 && suggestions[activeIdx]) {

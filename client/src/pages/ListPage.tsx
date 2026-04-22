@@ -3,11 +3,15 @@ import { useParams, Link } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '../lib/api'
 import { flushQueue } from '../lib/offlineQueue'
-import { STORE_AREAS } from '../types'
-import type { GroceryList, Item, StoreArea } from '../types'
+import type { GroceryList, Item, Store } from '../types'
 import ItemInput from '../components/ItemInput'
 import StoreAreaGroup from '../components/StoreAreaGroup'
 import OfflineBanner from '../components/OfflineBanner'
+
+const FALLBACK_AREAS = [
+  'Produce', 'Dairy', 'Bakery', 'Meat & Seafood', 'Frozen',
+  'Pantry', 'Beverages', 'Snacks', 'Household', 'Personal Care', 'Other',
+]
 
 export default function ListPage() {
   const { id } = useParams<{ id: string }>()
@@ -22,6 +26,19 @@ export default function ListPage() {
     queryFn: () => api.getList(id!),
     enabled: !!id,
   })
+
+  const { data: stores } = useQuery<Store[]>({
+    queryKey: ['stores'],
+    queryFn: api.getStores,
+  })
+
+  const { data: dictionary = {} } = useQuery<Record<string, string>>({
+    queryKey: ['dictionary', data?.store_type_id],
+    queryFn: () => api.getStoreDictionary(data!.store_type_id),
+    enabled: !!data?.store_type_id,
+  })
+
+  const areas = data?.areas ?? FALLBACK_AREAS
 
   useEffect(() => {
     if (id) localStorage.setItem('lastList', id)
@@ -64,6 +81,12 @@ export default function ListPage() {
     }
   }
 
+  async function changeStore(storeId: string) {
+    if (!id || storeId === data?.store_id) return
+    await api.updateListStore(id, storeId)
+    queryClient.invalidateQueries({ queryKey: ['list', id] })
+  }
+
   async function copyLink() {
     await navigator.clipboard.writeText(window.location.href)
     setCopied(true)
@@ -78,10 +101,9 @@ export default function ListPage() {
     queryClient.invalidateQueries({ queryKey: ['list', id] })
   }
 
-  // Group items by store area in fixed order
-  function groupedItems(): Array<{ area: StoreArea; items: Item[] }> {
+  function groupedItems(): Array<{ area: string; items: Item[] }> {
     if (!data) return []
-    return STORE_AREAS.map(area => ({
+    return areas.map(area => ({
       area,
       items: data.items.filter(i => i.store_area === area),
     })).filter(g => g.items.length > 0)
@@ -124,6 +146,20 @@ export default function ListPage() {
             {data.name}
           </h1>
         )}
+
+        {stores && stores.length > 1 && (
+          <select
+            className="header__store-select"
+            value={data.store_id}
+            onChange={e => changeStore(e.target.value)}
+            title="Store"
+          >
+            {stores.map(s => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </select>
+        )}
+
         <button className="header__btn" onClick={copyLink} title={copied ? 'Copied!' : 'Copy link'}>
           {copied ? '✓' : '🔗'}
         </button>
@@ -138,7 +174,7 @@ export default function ListPage() {
       </header>
 
       <div className="content">
-        <ItemInput listId={id!} history={data.history} />
+        <ItemInput listId={id!} history={data.history} dictionary={dictionary} />
 
         {data.items.length === 0 ? (
           <div className="empty-state">
@@ -152,6 +188,8 @@ export default function ListPage() {
               area={area}
               items={items}
               listId={id!}
+              dictionary={dictionary}
+              areas={areas}
             />
           ))
         )}

@@ -1,14 +1,13 @@
 import { useEffect } from 'react'
-import { STORE_AREAS } from '../types'
-import type { StoreArea } from '../types'
 
 interface Props {
-  current: StoreArea
-  onSelect: (area: StoreArea) => void
+  current: string
+  areas: string[]
+  onSelect: (area: string) => void
   onClose: () => void
 }
 
-export default function AreaPicker({ current, onSelect, onClose }: Props) {
+export default function AreaPicker({ current, areas, onSelect, onClose }: Props) {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
     document.addEventListener('keydown', handler)
@@ -19,7 +18,7 @@ export default function AreaPicker({ current, onSelect, onClose }: Props) {
     <div className="area-picker-overlay" onClick={onClose}>
       <div className="area-picker" onClick={e => e.stopPropagation()}>
         <div className="area-picker__title">Choose store area</div>
-        {STORE_AREAS.map(area => (
+        {areas.map(area => (
           <button
             key={area}
             className={`area-picker__option${area === current ? ' area-picker__option--active' : ''}`}

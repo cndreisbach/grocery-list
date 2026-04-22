@@ -1,4 +1,4 @@
-## ADDED Requirements
+## MODIFIED Requirements
 
 ### Requirement: Automatically classify items into store areas
 The system SHALL assign a store area to each item when it is added, using a client-side classification heuristic against the active store type's dictionary (fetched from the API and cached) and the list's item history.
@@ -36,36 +36,3 @@ Store areas are defined by the list's store type and are not a fixed global set.
 #### Scenario: Dictionary loaded from API before classification
 - **WHEN** a user opens a list and adds an item
 - **THEN** classification SHALL use the dictionary fetched from `GET /api/store-types/:id/dictionary` for the list's store type, not a bundled static file
-
-### Requirement: Items are grouped and sorted by store area
-The system SHALL display list items grouped under their store area, with groups sorted in a logical store-traversal order.
-
-#### Scenario: Items grouped by area
-- **WHEN** a list contains items from multiple store areas
-- **THEN** items are displayed under their respective store area headings
-
-#### Scenario: Consistent group ordering
-- **WHEN** a list is displayed
-- **THEN** store area groups appear in a fixed order approximating a typical store layout (e.g., Produce → Dairy → Bakery → Meat & Seafood → Frozen → Pantry → Beverages → Snacks → Household → Personal Care → Other)
-
-### Requirement: Manual store area override
-The system SHALL allow a user to change the store area of any item.
-
-#### Scenario: User overrides store area
-- **WHEN** a user selects a different store area from the item's area picker
-- **THEN** the item is moved to the selected store area group and the override is persisted
-
-#### Scenario: Override survives rename
-- **WHEN** a user renames an item that has a manually overridden store area
-- **THEN** the store area is NOT re-classified; the manual override is preserved
-
-#### Scenario: Override flag visible
-- **WHEN** an item has a manually overridden store area
-- **THEN** the UI indicates that the area was manually set (e.g., a small edit icon or label)
-
-### Requirement: History-informed classification for returning items
-The system SHALL use the store area from an item's purchase history (if available) as the classification result, taking precedence over the dictionary lookup and later fallback heuristics.
-
-#### Scenario: Exact history match used for classification
-- **WHEN** a user adds an item whose normalized name exactly matches an entry in the list's purchase history
-- **THEN** the item is assigned the store area stored in the history entry, not the dictionary default or any contained phrase match

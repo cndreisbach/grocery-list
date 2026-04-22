@@ -4,6 +4,7 @@ import listsRouter from './routes/lists'
 import itemsRouter from './routes/items'
 import recoverRouter from './routes/recover'
 import eventsRouter from './routes/events'
+import { storesRouter, storeTypesRouter } from './routes/stores'
 
 const app = new Hono()
 
@@ -14,6 +15,8 @@ app.route('/api/lists', listsRouter)
 app.route('/api/lists', itemsRouter)
 app.route('/api/lists', eventsRouter)
 app.route('/api/recover', recoverRouter)
+app.route('/api/stores', storesRouter)
+app.route('/api/store-types', storeTypesRouter)
 
 // Serve built React SPA in production
 app.get('*', async (c) => {

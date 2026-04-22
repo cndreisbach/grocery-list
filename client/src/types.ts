@@ -1,29 +1,12 @@
-export type StoreArea =
-  | 'Produce'
-  | 'Dairy'
-  | 'Bakery'
-  | 'Meat & Seafood'
-  | 'Frozen'
-  | 'Pantry'
-  | 'Beverages'
-  | 'Snacks'
-  | 'Household'
-  | 'Personal Care'
-  | 'Other'
+export type StoreArea = string
 
-export const STORE_AREAS: StoreArea[] = [
-  'Produce',
-  'Dairy',
-  'Bakery',
-  'Meat & Seafood',
-  'Frozen',
-  'Pantry',
-  'Beverages',
-  'Snacks',
-  'Household',
-  'Personal Care',
-  'Other',
-]
+export interface Store {
+  id: string
+  name: string
+  store_type_id: string
+  store_type_name: string
+  areas: string[]
+}
 
 export interface Item {
   id: string
@@ -45,6 +28,9 @@ export interface HistoryEntry {
 export interface GroceryList {
   id: string
   name: string
+  store_id: string
+  store_type_id: string
+  areas: string[]
   items: Item[]
   history: HistoryEntry[]
 }

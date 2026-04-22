@@ -24,7 +24,9 @@ app.post('/', async (c) => {
   }
 
   const id = randomUUID()
-  db.prepare('INSERT INTO lists (id, name, owner_email) VALUES (?, ?, ?)').run(id, name, email)
+  db.prepare('INSERT INTO lists (id, name, owner_email, store_id) VALUES (?, ?, ?, ?)').run(
+    id, name, email, 'store-grocery'
+  )
 
   sendListCreatedEmail(email, { id, name }).catch(err =>
     console.error('Failed to send list created email:', err)
@@ -35,11 +37,15 @@ app.post('/', async (c) => {
 
 app.get('/:id', (c) => {
   const { id } = c.req.param()
-  const list = db.prepare('SELECT id, name FROM lists WHERE id = ?').get(id) as
-    | { id: string; name: string }
-    | null
+  const row = db.prepare(`
+    SELECT l.id, l.name, l.store_id, s.store_type_id, st.areas
+    FROM lists l
+    LEFT JOIN stores s ON l.store_id = s.id
+    LEFT JOIN store_types st ON s.store_type_id = st.id
+    WHERE l.id = ?
+  `).get(id) as { id: string; name: string; store_id: string | null; store_type_id: string | null; areas: string | null } | null
 
-  if (!list) return c.json({ error: 'List not found' }, 404)
+  if (!row) return c.json({ error: 'List not found' }, 404)
 
   const items = (
     db.prepare(
@@ -51,7 +57,18 @@ app.get('/:id', (c) => {
     'SELECT name, store_area, last_used FROM item_history WHERE list_id = ? ORDER BY last_used DESC'
   ).all(id)
 
-  return c.json({ ...list, items, history })
+  return c.json({
+    id: row.id,
+    name: row.name,
+    store_id: row.store_id ?? 'store-grocery',
+    store_type_id: row.store_type_id ?? 'grocery',
+    areas: row.areas ? JSON.parse(row.areas) as string[] : [
+      'Produce', 'Dairy', 'Bakery', 'Meat & Seafood', 'Frozen',
+      'Pantry', 'Beverages', 'Snacks', 'Household', 'Personal Care', 'Other',
+    ],
+    items,
+    history,
+  })
 })
 
 app.patch('/:id', async (c) => {
@@ -70,6 +87,33 @@ app.patch('/:id', async (c) => {
   if (!result) return c.json({ error: 'List not found' }, 404)
   broadcast(id, 'list_updated', result)
   return c.json(result)
+})
+
+// PATCH /api/lists/:id/store — update the store and bulk-reclassify all items to "Other"
+app.patch('/:id/store', async (c) => {
+  const { id } = c.req.param()
+  const body = await c.req.json().catch(() => ({}))
+  const storeId: string = body?.store_id ?? ''
+
+  if (!storeId || typeof storeId !== 'string') {
+    return c.json({ error: 'store_id required' }, 400)
+  }
+
+  const store = db.prepare('SELECT id FROM stores WHERE id = ?').get(storeId)
+  if (!store) return c.json({ error: 'Store not found' }, 404)
+
+  const list = db.prepare('SELECT id FROM lists WHERE id = ?').get(id)
+  if (!list) return c.json({ error: 'List not found' }, 404)
+
+  db.transaction(() => {
+    db.prepare('UPDATE lists SET store_id = ? WHERE id = ?').run(storeId, id)
+    db.prepare(
+      "UPDATE items SET store_area = 'Other', area_overridden = 0, updated_at = CURRENT_TIMESTAMP WHERE list_id = ?"
+    ).run(id)
+  })()
+
+  broadcast(id, 'list_updated', { id, store_id: storeId })
+  return c.json({ id, store_id: storeId })
 })
 
 export default app

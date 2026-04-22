@@ -1,6 +1,8 @@
 import { test, expect, describe } from 'bun:test'
 import { classifyItem, normalizeItemName } from './classify'
-import type { StoreArea } from '../types'
+import groceryDict from '../data/dictionary.json'
+
+const dict = groceryDict as Record<string, string>
 
 describe('normalizeItemName', () => {
   test('lowercases and trims', () => expect(normalizeItemName('  Apples  ')).toBe('apple'))
@@ -13,7 +15,7 @@ describe('normalizeItemName', () => {
 })
 
 describe('classifyItem — exact matches', () => {
-  const cases: Array<[string, StoreArea]> = [
+  const cases: Array<[string, string]> = [
     ['apple', 'Produce'],
     ['banana', 'Produce'],
     ['spinach', 'Produce'],
@@ -98,75 +100,75 @@ describe('classifyItem — exact matches', () => {
 
   for (const [input, expected] of cases) {
     test(`"${input}" → ${expected}`, () => {
-      expect(classifyItem(input)).toBe(expected)
+      expect(classifyItem(input, dict)).toBe(expected)
     })
   }
 })
 
 describe('classifyItem — case-insensitive matching', () => {
-  test('uppercase dictionary input matches', () => expect(classifyItem('OATMEAL')).toBe('Pantry'))
+  test('uppercase dictionary input matches', () => expect(classifyItem('OATMEAL', dict)).toBe('Pantry'))
   test('mixed-case contained dictionary input matches', () =>
-    expect(classifyItem('Instant Oatmeal')).toBe('Pantry'))
+    expect(classifyItem('Instant Oatmeal', dict)).toBe('Pantry'))
   test('mixed-case history input matches', () => {
-    const history = [{ name: 'Oat Milk', store_area: 'Beverages' as const, last_used: '' }]
-    expect(classifyItem('oAt MiLk', history)).toBe('Beverages')
+    const history = [{ name: 'Oat Milk', store_area: 'Beverages', last_used: '' }]
+    expect(classifyItem('oAt MiLk', dict, history)).toBe('Beverages')
   })
 })
 
 describe('classifyItem — plurals and variants', () => {
-  test('apples → Produce', () => expect(classifyItem('apples')).toBe('Produce'))
-  test('strawberries → Produce', () => expect(classifyItem('strawberries')).toBe('Produce'))
-  test('tomatoes → Produce', () => expect(classifyItem('tomatoes')).toBe('Produce'))
-  test('potatoes → Produce', () => expect(classifyItem('potatoes')).toBe('Produce'))
-  test('blueberries → Produce', () => expect(classifyItem('blueberries')).toBe('Produce'))
+  test('apples → Produce', () => expect(classifyItem('apples', dict)).toBe('Produce'))
+  test('strawberries → Produce', () => expect(classifyItem('strawberries', dict)).toBe('Produce'))
+  test('tomatoes → Produce', () => expect(classifyItem('tomatoes', dict)).toBe('Produce'))
+  test('potatoes → Produce', () => expect(classifyItem('potatoes', dict)).toBe('Produce'))
+  test('blueberries → Produce', () => expect(classifyItem('blueberries', dict)).toBe('Produce'))
   test('chicken breasts → Meat & Seafood', () =>
-    expect(classifyItem('chicken breasts')).toBe('Meat & Seafood'))
-  test('frozen peas → Frozen', () => expect(classifyItem('frozen peas')).toBe('Frozen'))
-  test('batteries → Household', () => expect(classifyItem('batteries')).toBe('Household'))
-  test('vitamins → Personal Care', () => expect(classifyItem('vitamins')).toBe('Personal Care'))
+    expect(classifyItem('chicken breasts', dict)).toBe('Meat & Seafood'))
+  test('frozen peas → Frozen', () => expect(classifyItem('frozen peas', dict)).toBe('Frozen'))
+  test('batteries → Household', () => expect(classifyItem('batteries', dict)).toBe('Household'))
+  test('vitamins → Personal Care', () => expect(classifyItem('vitamins', dict)).toBe('Personal Care'))
 })
 
 describe('classifyItem — contained phrase matching', () => {
-  test('instant oatmeal → Pantry', () => expect(classifyItem('instant oatmeal')).toBe('Pantry'))
+  test('instant oatmeal → Pantry', () => expect(classifyItem('instant oatmeal', dict)).toBe('Pantry'))
   test('chicken tenders → Meat & Seafood', () =>
-    expect(classifyItem('chicken tenders')).toBe('Meat & Seafood'))
+    expect(classifyItem('chicken tenders', dict)).toBe('Meat & Seafood'))
   test('ground beef tacos → Meat & Seafood', () =>
-    expect(classifyItem('ground beef tacos')).toBe('Meat & Seafood'))
+    expect(classifyItem('ground beef tacos', dict)).toBe('Meat & Seafood'))
   test('low sodium chicken broth prefers broth over chicken → Pantry', () =>
-    expect(classifyItem('low sodium chicken broth')).toBe('Pantry'))
+    expect(classifyItem('low sodium chicken broth', dict)).toBe('Pantry'))
   test('cheese matches a more specific dictionary phrase → Dairy', () =>
-    expect(classifyItem('cheese')).toBe('Dairy'))
+    expect(classifyItem('cheese', dict)).toBe('Dairy'))
 })
 
 describe('classifyItem — fuzzy matching', () => {
   test('asparagus (stripped to asparagu) → Produce', () =>
-    expect(classifyItem('asparagus')).toBe('Produce'))
-  test('typo "tomatoe" → Produce', () => expect(classifyItem('tomatoe')).toBe('Produce'))
-  test('typo "brocoli" → Produce', () => expect(classifyItem('brocoli')).toBe('Produce'))
-  test('typo "buttr" → Dairy', () => expect(classifyItem('buttr')).toBe('Dairy'))
+    expect(classifyItem('asparagus', dict)).toBe('Produce'))
+  test('typo "tomatoe" → Produce', () => expect(classifyItem('tomatoe', dict)).toBe('Produce'))
+  test('typo "brocoli" → Produce', () => expect(classifyItem('brocoli', dict)).toBe('Produce'))
+  test('typo "buttr" → Dairy', () => expect(classifyItem('buttr', dict)).toBe('Dairy'))
 })
 
 describe('classifyItem — synonyms', () => {
-  test('pop → Beverages', () => expect(classifyItem('pop')).toBe('Beverages'))
-  test('aubergine → Produce', () => expect(classifyItem('aubergine')).toBe('Produce'))
-  test('courgette → Produce', () => expect(classifyItem('courgette')).toBe('Produce'))
-  test('coriander → Produce', () => expect(classifyItem('coriander')).toBe('Produce'))
+  test('pop → Beverages', () => expect(classifyItem('pop', dict)).toBe('Beverages'))
+  test('aubergine → Produce', () => expect(classifyItem('aubergine', dict)).toBe('Produce'))
+  test('courgette → Produce', () => expect(classifyItem('courgette', dict)).toBe('Produce'))
+  test('coriander → Produce', () => expect(classifyItem('coriander', dict)).toBe('Produce'))
 })
 
 describe('classifyItem — history takes precedence', () => {
   const history = [
-    { name: 'oat milk', store_area: 'Beverages' as const, last_used: '' },
-    { name: 'chicken', store_area: 'Frozen' as const, last_used: '' },
+    { name: 'oat milk', store_area: 'Beverages', last_used: '' },
+    { name: 'chicken', store_area: 'Frozen', last_used: '' },
   ]
 
   test('oat milk in history overrides dictionary', () =>
-    expect(classifyItem('oat milk', history)).toBe('Beverages'))
+    expect(classifyItem('oat milk', dict, history)).toBe('Beverages'))
   test('exact history match beats contained dictionary match', () =>
-    expect(classifyItem('chicken', history)).toBe('Frozen'))
+    expect(classifyItem('chicken', dict, history)).toBe('Frozen'))
   test('contained history match beats contained dictionary match', () =>
-    expect(classifyItem('chicken tenders', history)).toBe('Frozen'))
+    expect(classifyItem('chicken tenders', dict, history)).toBe('Frozen'))
 })
 
 describe('classifyItem — unknown items', () => {
-  test('unknown item → Other', () => expect(classifyItem('xyzabc123')).toBe('Other'))
+  test('unknown item → Other', () => expect(classifyItem('xyzabc123', dict)).toBe('Other'))
 })
