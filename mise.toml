@@ -1,3 +1,16 @@
 [tools]
 bun = "latest"
 "npm:@fission-ai/openspec" = "latest"
+
+[tasks.build]
+run = "bun run build:client"
+sources = ["client/src/**/*", "client/index.html", "client/public/**/*", "client/package.json"]
+outputs = ["dist/**/*"]
+
+[tasks.dev]
+run = "bun run dev"
+depends = ["build"]
+
+[tasks.deploy]
+run = "caprover deploy -d"
+interactive = true
