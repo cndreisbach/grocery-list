@@ -10,3 +10,4 @@ dist/
 mise.local.toml
 *.tsbuildinfo
 
+.agents/*.local.json
