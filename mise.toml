@@ -1,5 +1,6 @@
 [tools]
 bun = "latest"
+glow = "latest"
 "npm:@fission-ai/openspec" = "latest"
 
 [tasks.build]
