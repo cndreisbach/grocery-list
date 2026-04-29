@@ -33,4 +33,22 @@ export interface GroceryList {
   areas: string[]
   items: Item[]
   history: HistoryEntry[]
+  user_role: 'owner' | 'member'
+}
+
+export interface ListSummary {
+  id: string
+  name: string
+  role: 'owner' | 'member'
+}
+
+export interface Member {
+  id: string
+  email: string
+  role: 'owner' | 'member'
+}
+
+export interface User {
+  id: string
+  email: string
 }

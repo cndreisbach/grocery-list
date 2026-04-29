@@ -1,41 +1,23 @@
 ## ADDED Requirements
 
-### Requirement: Create a new grocery list via email
-The system SHALL allow a user to create a new grocery list by submitting their email address from the home page. The system SHALL email the user a link to the new list and navigate them to it directly.
-
-#### Scenario: User creates a list from the home page
-- **WHEN** a user enters a valid email address and activates "Create new list"
-- **THEN** the system creates a new list (UUID v4), stores the email as owner, sends an email containing the list URL, and navigates the user to `/list/[uuid]`
-
-#### Scenario: Invalid email rejected
-- **WHEN** a user submits a malformed email address
-- **THEN** the list is not created and an inline validation error is shown
-
-#### Scenario: UUID is unique
-- **WHEN** a new list is created
-- **THEN** the generated UUID SHALL NOT collide with any existing list ID
-
-### Requirement: Recover lost list links via email
-The system SHALL allow a user to retrieve links to all lists they previously created by submitting their email address.
-
-#### Scenario: User requests their lists
-- **WHEN** a user enters their email address and activates "Send me my lists"
-- **THEN** the system sends an email to that address containing the name and URL of every list associated with it, and displays a "Check your email" confirmation on the page
-
-#### Scenario: No lists found for email
-- **WHEN** a user requests recovery for an email with no associated lists
-- **THEN** the system still displays "Check your email" (to avoid email enumeration) and sends no email
-
 ### Requirement: Access a list via URL
-The system SHALL grant full access to a grocery list to any user who navigates to its UUID URL. No login or verification is required beyond possessing the URL.
+The system SHALL grant access to a grocery list only to authenticated users who are members of that list. Possessing the UUID URL is not sufficient without a valid session and membership.
 
-#### Scenario: Valid list URL accessed
-- **WHEN** a user navigates to `/list/[uuid]` for an existing list
+#### Scenario: Authenticated member accesses list URL
+- **WHEN** an authenticated list member navigates to `/list/[uuid]`
 - **THEN** the system displays the list with all its items, grouped by the store type's areas in their defined order
 
+#### Scenario: Unauthenticated user accesses list URL
+- **WHEN** a visitor without a valid session navigates to `/list/[uuid]`
+- **THEN** the system redirects them to the login page
+
+#### Scenario: Authenticated non-member accesses list URL
+- **WHEN** an authenticated user who is not a member of the list navigates to `/list/[uuid]`
+- **THEN** the system displays a "Not found or access denied" message
+
 #### Scenario: Unknown list URL accessed
-- **WHEN** a user navigates to `/list/[uuid]` for a UUID that does not exist
-- **THEN** the system displays a "List not found" message with an option to return to the home page
+- **WHEN** an authenticated user navigates to `/list/[uuid]` for a UUID that does not exist
+- **THEN** the system displays a "List not found" message with an option to return to the dashboard
 
 ### Requirement: Lists are associated with a store
 The system SHALL associate each list with a store instance. The store determines the area vocabulary and classification dictionary used for that list.

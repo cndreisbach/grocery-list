@@ -1,7 +1,6 @@
 import { Hono } from 'hono'
 import { randomUUID } from 'crypto'
-import db from '../db'
-import { sendListCreatedEmail } from '../email'
+import db, { getMemberRole } from '../db'
 import { broadcast } from '../broadcast'
 
 const app = new Hono()
@@ -15,28 +14,28 @@ function rowToItem(row: Record<string, unknown>) {
 }
 
 app.post('/', async (c) => {
+  const user = c.get('user')
   const body = await c.req.json().catch(() => ({}))
-  const email: string = body?.email ?? ''
   const name: string = body?.name ?? 'Grocery List'
-
-  if (!email || typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return c.json({ error: 'Valid email required' }, 400)
-  }
 
   const id = randomUUID()
   db.prepare('INSERT INTO lists (id, name, owner_email, store_id) VALUES (?, ?, ?, ?)').run(
-    id, name, email, 'store-grocery'
+    id, name, user.email, 'store-grocery'
   )
-
-  sendListCreatedEmail(email, { id, name }).catch(err =>
-    console.error('Failed to send list created email:', err)
+  db.prepare('INSERT INTO list_members (list_id, user_id, role) VALUES (?, ?, ?)').run(
+    id, user.id, 'owner'
   )
 
   return c.json({ id, name }, 201)
 })
 
 app.get('/:id', (c) => {
+  const user = c.get('user')
   const { id } = c.req.param()
+
+  const role = getMemberRole(id, user.id)
+  if (!role) return c.json({ error: 'Not found or access denied' }, 403)
+
   const row = db.prepare(`
     SELECT l.id, l.name, l.store_id, s.store_type_id, st.areas
     FROM lists l
@@ -68,11 +67,16 @@ app.get('/:id', (c) => {
     ],
     items,
     history,
+    user_role: role,
   })
 })
 
 app.patch('/:id', async (c) => {
+  const user = c.get('user')
   const { id } = c.req.param()
+
+  if (!getMemberRole(id, user.id)) return c.json({ error: 'Not found or access denied' }, 403)
+
   const body = await c.req.json().catch(() => ({}))
   const name: string = body?.name ?? ''
 
@@ -91,7 +95,11 @@ app.patch('/:id', async (c) => {
 
 // PATCH /api/lists/:id/store — update the store and bulk-reclassify all items to "Other"
 app.patch('/:id/store', async (c) => {
+  const user = c.get('user')
   const { id } = c.req.param()
+
+  if (!getMemberRole(id, user.id)) return c.json({ error: 'Not found or access denied' }, 403)
+
   const body = await c.req.json().catch(() => ({}))
   const storeId: string = body?.store_id ?? ''
 

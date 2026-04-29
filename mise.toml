@@ -5,7 +5,12 @@ glow = "latest"
 
 [tasks.build]
 run = "bun run build:client"
-sources = ["client/src/**/*", "client/index.html", "client/public/**/*", "client/package.json"]
+sources = [
+  "client/src/**/*",
+  "client/index.html",
+  "client/public/**/*",
+  "client/package.json",
+]
 outputs = ["dist/**/*"]
 
 [tasks.dev]

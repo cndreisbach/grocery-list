@@ -2,11 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '../lib/api'
+import { useAuth } from '../lib/auth'
 import { flushQueue } from '../lib/offlineQueue'
 import type { GroceryList, Item, Store } from '../types'
 import ItemInput from '../components/ItemInput'
 import StoreAreaGroup from '../components/StoreAreaGroup'
 import OfflineBanner from '../components/OfflineBanner'
+import MembersPanel from '../components/MembersPanel'
 
 const FALLBACK_AREAS = [
   'Produce', 'Dairy', 'Bakery', 'Meat & Seafood', 'Frozen',
@@ -16,10 +18,12 @@ const FALLBACK_AREAS = [
 export default function ListPage() {
   const { id } = useParams<{ id: string }>()
   const queryClient = useQueryClient()
+  const { logout } = useAuth()
   const [listName, setListName] = useState('')
   const [editingName, setEditingName] = useState(false)
   const nameInputRef = useRef<HTMLInputElement>(null)
   const [copied, setCopied] = useState(false)
+  const [showMembers, setShowMembers] = useState(false)
 
   const { data, isLoading, isError } = useQuery<GroceryList>({
     queryKey: ['list', id],
@@ -163,15 +167,21 @@ export default function ListPage() {
         <button className="header__btn" onClick={copyLink} title={copied ? 'Copied!' : 'Copy link'}>
           {copied ? '✓' : '🔗'}
         </button>
-        <Link
-          to="/"
+        <button
           className="header__btn"
-          title="New list"
-          onClick={() => localStorage.removeItem('lastList')}
+          onClick={() => setShowMembers(v => !v)}
+          title="Members"
+          aria-pressed={showMembers}
         >
-          +
-        </Link>
+          👥
+        </button>
+        <Link to="/" className="header__btn" title="My lists">☰</Link>
+        <button className="header__btn" onClick={logout} title="Sign out">⎋</button>
       </header>
+
+      {showMembers && (
+        <MembersPanel listId={id!} userRole={data.user_role} />
+      )}
 
       <div className="content">
         <ItemInput listId={id!} history={data.history} dictionary={dictionary} />

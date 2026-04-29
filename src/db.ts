@@ -547,4 +547,59 @@ if (user_version < 1) {
   db.exec('PRAGMA user_version = 1')
 }
 
+if (user_version < 2) {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+      id TEXT PRIMARY KEY,
+      email TEXT UNIQUE NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS sessions (
+      token TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS otp_codes (
+      id TEXT PRIMARY KEY,
+      code TEXT NOT NULL,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      expires_at DATETIME NOT NULL,
+      used INTEGER NOT NULL DEFAULT 0,
+      attempts INTEGER NOT NULL DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS list_members (
+      list_id TEXT NOT NULL REFERENCES lists(id) ON DELETE CASCADE,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      role TEXT NOT NULL DEFAULT 'member',
+      PRIMARY KEY (list_id, user_id)
+    )
+  `)
+
+  db.exec('PRAGMA user_version = 2')
+}
+
+export function adoptLegacyLists(userId: string, email: string) {
+  db.prepare(`
+    INSERT OR IGNORE INTO list_members (list_id, user_id, role)
+    SELECT id, ?, 'owner' FROM lists WHERE owner_email = ?
+  `).run(userId, email)
+}
+
+export function getMemberRole(listId: string, userId: string): string | null {
+  const row = db.prepare(
+    'SELECT role FROM list_members WHERE list_id = ? AND user_id = ?'
+  ).get(listId, userId) as { role: string } | null
+  return row?.role ?? null
+}
+
 export default db

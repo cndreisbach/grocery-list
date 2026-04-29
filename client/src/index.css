@@ -637,3 +637,118 @@ a {
   font-size: 1.25rem;
   color: var(--color-header);
 }
+
+/* Dashboard */
+.dashboard__lists {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.dashboard__list-item {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.dashboard__list-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.dashboard__list-link:hover {
+  background: var(--color-bg);
+  border-radius: var(--radius);
+}
+
+.dashboard__list-name {
+  font-weight: 500;
+}
+
+.dashboard__list-role {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  text-transform: capitalize;
+}
+
+/* Members panel */
+.members-panel {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  padding: 16px 20px;
+}
+
+.members-panel__title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+}
+
+.members-panel__list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.members-panel__member {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.members-panel__email {
+  flex: 1;
+  font-size: 0.95rem;
+}
+
+.members-panel__role {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  text-transform: capitalize;
+}
+
+.members-panel__invite {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.members-panel__invite .home__input-group {
+  margin-bottom: 0;
+}
+
+.members-panel__invite-btn {
+  width: 100%;
+}
+
+@media (min-width: 480px) {
+  .members-panel__invite {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .members-panel__invite .home__input-group {
+    flex: 1;
+  }
+
+  .members-panel__invite-btn {
+    width: auto;
+  }
+}
+
+.input--sm {
+  padding: 8px 10px;
+  font-size: 0.9rem;
+}

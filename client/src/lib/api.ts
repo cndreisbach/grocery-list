@@ -1,4 +1,4 @@
-import type { GroceryList, Item, Store } from '../types'
+import type { GroceryList, Item, Store, ListSummary, Member, User } from '../types'
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, {
@@ -14,16 +14,33 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  createList: (email: string, name?: string) =>
-    request<{ id: string; name: string }>('/api/lists', {
-      method: 'POST',
-      body: JSON.stringify({ email, name }),
-    }),
-
-  recoverLists: (email: string) =>
-    request<{ message: string }>('/api/recover', {
+  requestOtp: (email: string) =>
+    request<{ message: string }>('/api/auth/request-otp', {
       method: 'POST',
       body: JSON.stringify({ email }),
+    }),
+
+  verifyOtp: (email: string, code: string) =>
+    request<User>('/api/auth/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email, code }),
+    }),
+
+  logout: () => request<{ message: string }>('/api/auth/logout', { method: 'POST' }),
+
+  getMe: () =>
+    fetch('/api/auth/me').then(res => {
+      if (res.status === 401) return null
+      if (!res.ok) return null
+      return res.json() as Promise<User>
+    }),
+
+  getMyLists: () => request<ListSummary[]>('/api/users/me/lists'),
+
+  createList: (name?: string) =>
+    request<{ id: string; name: string }>('/api/lists', {
+      method: 'POST',
+      body: JSON.stringify({ name }),
     }),
 
   getList: (id: string) => request<GroceryList>(`/api/lists/${id}`),
@@ -69,4 +86,15 @@ export const api = {
 
   clearChecked: (listId: string) =>
     request<void>(`/api/lists/${listId}/items?checked=true`, { method: 'DELETE' }),
+
+  getMembers: (listId: string) => request<Member[]>(`/api/lists/${listId}/members`),
+
+  inviteMember: (listId: string, email: string) =>
+    request<Member>(`/api/lists/${listId}/members`, {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    }),
+
+  removeMember: (listId: string, userId: string) =>
+    request<void>(`/api/lists/${listId}/members/${userId}`, { method: 'DELETE' }),
 }

@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { randomUUID } from 'crypto'
-import db from '../db'
+import db, { getMemberRole } from '../db'
 import { broadcast } from '../broadcast'
 
 const app = new Hono()
@@ -23,9 +23,9 @@ function upsertHistory(listId: string, name: string, storeArea: string) {
 
 // POST /api/lists/:id/items
 app.post('/:id/items', async (c) => {
+  const user = c.get('user')
   const { id: listId } = c.req.param()
-  const list = db.prepare('SELECT id FROM lists WHERE id = ?').get(listId)
-  if (!list) return c.json({ error: 'List not found' }, 404)
+  if (!getMemberRole(listId, user.id)) return c.json({ error: 'List not found' }, 404)
 
   const body = await c.req.json().catch(() => ({}))
   const name: string = body?.name ?? ''
@@ -52,7 +52,9 @@ app.post('/:id/items', async (c) => {
 
 // PATCH /api/lists/:id/items/:itemId
 app.patch('/:id/items/:itemId', async (c) => {
+  const user = c.get('user')
   const { id: listId, itemId } = c.req.param()
+  if (!getMemberRole(listId, user.id)) return c.json({ error: 'List not found' }, 404)
   const existing = db.prepare(
     'SELECT * FROM items WHERE id = ? AND list_id = ?'
   ).get(itemId, listId) as Record<string, unknown> | null
@@ -91,7 +93,9 @@ app.patch('/:id/items/:itemId', async (c) => {
 
 // DELETE /api/lists/:id/items/:itemId
 app.delete('/:id/items/:itemId', (c) => {
+  const user = c.get('user')
   const { id: listId, itemId } = c.req.param()
+  if (!getMemberRole(listId, user.id)) return c.json({ error: 'List not found' }, 404)
   const result = db.prepare(
     'DELETE FROM items WHERE id = ? AND list_id = ? RETURNING id'
   ).get(itemId, listId) as { id: string } | null
@@ -103,7 +107,9 @@ app.delete('/:id/items/:itemId', (c) => {
 
 // DELETE /api/lists/:id/items?checked=true
 app.delete('/:id/items', (c) => {
+  const user = c.get('user')
   const { id: listId } = c.req.param()
+  if (!getMemberRole(listId, user.id)) return c.json({ error: 'List not found' }, 404)
   const checked = c.req.query('checked')
 
   if (checked !== 'true') {
