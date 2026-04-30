@@ -12,7 +12,7 @@ import { requireAuth } from './middleware/auth'
 const app = new Hono()
 
 // Allow Vite dev server origin in development
-app.use('/api/*', cors({ origin: process.env.NODE_ENV === 'production' ? false : '*' }))
+app.use('/api/*', cors({ origin: process.env.NODE_ENV === 'production' ? process.env.APP_URL! : '*' }))
 
 app.route('/api/auth', authRouter)
 
