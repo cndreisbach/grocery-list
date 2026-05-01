@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '../lib/api'
@@ -17,10 +17,6 @@ export default function DashboardPage() {
     queryKey: ['my-lists'],
     queryFn: api.getMyLists,
   })
-
-  useEffect(() => {
-    if (lists?.length === 1) navigate(`/list/${lists[0].id}`, { replace: true })
-  }, [lists, navigate])
 
   async function handleCreate() {
     setCreating(true)

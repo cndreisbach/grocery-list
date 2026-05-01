@@ -1,15 +1,11 @@
 ## ADDED Requirements
 
 ### Requirement: User dashboard
-The system SHALL show an authenticated user a dashboard listing all lists they own or are a member of. If the user has exactly one list, the system SHALL redirect them directly to that list instead of showing the dashboard.
+The system SHALL show an authenticated user a dashboard listing all lists they own or are a member of.
 
 #### Scenario: User has multiple lists
 - **WHEN** an authenticated user navigates to the dashboard
 - **THEN** the system displays the name and a link for each list the user owns or is a member of
-
-#### Scenario: User has exactly one list
-- **WHEN** an authenticated user has exactly one list
-- **THEN** the system redirects them directly to that list page without showing the dashboard
 
 #### Scenario: User has no lists
 - **WHEN** an authenticated user has no lists
