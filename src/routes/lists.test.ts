@@ -65,6 +65,12 @@ const patch = (path: string, body: unknown, cookie?: string) =>
     body: JSON.stringify(body),
   }))
 
+const del = (path: string, cookie?: string) =>
+  app.fetch(new Request(`http://localhost${path}`, {
+    method: 'DELETE',
+    headers: cookie ? { Cookie: cookie } : {},
+  }))
+
 // ---------------------------------------------------------------------------
 
 describe('POST /api/lists', () => {
@@ -204,6 +210,51 @@ describe('PATCH /api/lists/:id', () => {
     const { userId, email } = createUser('a@example.com')
     const listId = createList(userId, email)
     const res = await patch(`/api/lists/${listId}`, { name: 'Name' })
+    expect(res.status).toBe(401)
+  })
+})
+
+// ---------------------------------------------------------------------------
+
+describe('DELETE /api/lists/:id', () => {
+  test('owner can delete their list and it cascades items', async () => {
+    const { userId, email, cookie } = createUser('a@example.com')
+    const listId = createList(userId, email)
+    addItem(listId, 'Apples')
+
+    const res = await del(`/api/lists/${listId}`, cookie)
+    expect(res.status).toBe(204)
+
+    const list = db.prepare('SELECT id FROM lists WHERE id = ?').get(listId)
+    expect(list).toBeNull()
+
+    const items = db.prepare('SELECT id FROM items WHERE list_id = ?').all(listId)
+    expect(items).toHaveLength(0)
+  })
+
+  test('non-owner member gets 403', async () => {
+    const { userId: ownerId, email: ownerEmail } = createUser('owner@example.com')
+    const { userId: memberId, cookie: memberCookie } = createUser('member@example.com')
+    const listId = createList(ownerId, ownerEmail)
+    db.prepare('INSERT INTO list_members (list_id, user_id, role) VALUES (?, ?, ?)').run(listId, memberId, 'member')
+
+    const res = await del(`/api/lists/${listId}`, memberCookie)
+    expect(res.status).toBe(403)
+  })
+
+  test('non-member gets 403', async () => {
+    const { userId: ownerId, email: ownerEmail } = createUser('owner@example.com')
+    const { cookie } = createUser('other@example.com')
+    const listId = createList(ownerId, ownerEmail)
+
+    const res = await del(`/api/lists/${listId}`, cookie)
+    expect(res.status).toBe(403)
+  })
+
+  test('unauthenticated request returns 401', async () => {
+    const { userId, email } = createUser('a@example.com')
+    const listId = createList(userId, email)
+    const res = await del(`/api/lists/${listId}`)
     expect(res.status).toBe(401)
   })
 })

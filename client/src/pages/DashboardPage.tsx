@@ -12,11 +12,18 @@ export default function DashboardPage() {
   const [newListName, setNewListName] = useState('')
   const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState('')
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 
   const { data: lists, isLoading } = useQuery<ListSummary[]>({
     queryKey: ['my-lists'],
     queryFn: api.getMyLists,
   })
+
+  async function handleDelete(id: string) {
+    await api.deleteList(id)
+    setConfirmDeleteId(null)
+    queryClient.invalidateQueries({ queryKey: ['my-lists'] })
+  }
 
   async function handleCreate() {
     setCreating(true)
@@ -45,10 +52,25 @@ export default function DashboardPage() {
           <ul className="dashboard__lists">
             {lists.map(list => (
               <li key={list.id} className="dashboard__list-item">
-                <Link to={`/list/${list.id}`} className="dashboard__list-link">
-                  <span className="dashboard__list-name">{list.name}</span>
-                  <span className="dashboard__list-role">{list.role}</span>
-                </Link>
+                {confirmDeleteId === list.id ? (
+                  <div className="dashboard__list-confirm">
+                    <span className="dashboard__list-name">Delete "{list.name}"?</span>
+                    <button className="btn btn--danger" onClick={() => handleDelete(list.id)}>Delete</button>
+                    <button className="btn" onClick={() => setConfirmDeleteId(null)}>Cancel</button>
+                  </div>
+                ) : (
+                  <Link to={`/list/${list.id}`} className="dashboard__list-link">
+                    <span className="dashboard__list-name">{list.name}</span>
+                    <span className="dashboard__list-role">{list.role}</span>
+                    {list.role === 'owner' && (
+                      <button
+                        className="dashboard__list-delete"
+                        onClick={e => { e.preventDefault(); setConfirmDeleteId(list.id) }}
+                        aria-label={`Delete ${list.name}`}
+                      >✕</button>
+                    )}
+                  </Link>
+                )}
               </li>
             ))}
           </ul>

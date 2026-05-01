@@ -97,4 +97,7 @@ export const api = {
 
   removeMember: (listId: string, userId: string) =>
     request<void>(`/api/lists/${listId}/members/${userId}`, { method: 'DELETE' }),
+
+  deleteList: (id: string) =>
+    request<void>(`/api/lists/${id}`, { method: 'DELETE' }),
 }

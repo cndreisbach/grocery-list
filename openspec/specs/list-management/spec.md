@@ -15,8 +15,8 @@ The system SHALL grant access to a grocery list only to authenticated users who 
 - **WHEN** an authenticated user who is not a member of the list navigates to `/list/[uuid]`
 - **THEN** the system displays a "Not found or access denied" message
 
-#### Scenario: Unknown list URL accessed
-- **WHEN** an authenticated user navigates to `/list/[uuid]` for a UUID that does not exist
+#### Scenario: Unknown or deleted list URL accessed
+- **WHEN** an authenticated user navigates to `/list/[uuid]` for a UUID that does not exist or has been deleted
 - **THEN** the system displays a "List not found" message with an option to return to the dashboard
 
 ### Requirement: Lists are associated with a store

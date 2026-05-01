@@ -61,6 +61,7 @@ export default function ListPage() {
     source.addEventListener('item_deleted', () => queryClient.invalidateQueries({ queryKey: ['list', id] }))
     source.addEventListener('items_cleared', () => queryClient.invalidateQueries({ queryKey: ['list', id] }))
     source.addEventListener('list_updated', () => queryClient.invalidateQueries({ queryKey: ['list', id] }))
+    source.addEventListener('list_deleted', () => queryClient.invalidateQueries({ queryKey: ['list', id] }))
     return () => source.close()
   }, [id, queryClient])
 

@@ -93,6 +93,18 @@ app.patch('/:id', async (c) => {
   return c.json(result)
 })
 
+app.delete('/:id', (c) => {
+  const user = c.get('user')
+  const { id } = c.req.param()
+
+  const role = getMemberRole(id, user.id)
+  if (role !== 'owner') return c.json({ error: 'Not found or access denied' }, 403)
+
+  db.prepare('DELETE FROM lists WHERE id = ?').run(id)
+  broadcast(id, 'list_deleted', { id })
+  return c.body(null, 204)
+})
+
 // PATCH /api/lists/:id/store — update the store and bulk-reclassify all items to "Other"
 app.patch('/:id/store', async (c) => {
   const user = c.get('user')
