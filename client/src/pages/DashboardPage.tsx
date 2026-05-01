@@ -48,7 +48,7 @@ export default function DashboardPage() {
       </header>
 
       <main style={{ padding: '20px', flex: 1 }}>
-        {lists && lists.length > 1 && (
+        {lists && lists.length > 0 && (
           <ul className="dashboard__lists">
             {lists.map(list => (
               <li key={list.id} className="dashboard__list-item">
@@ -76,7 +76,7 @@ export default function DashboardPage() {
           </ul>
         )}
 
-        <div className="home__card" style={{ marginTop: lists && lists.length > 1 ? 24 : 0 }}>
+        <div className="home__card" style={{ marginTop: lists && lists.length > 0 ? 24 : 0 }}>
           <p className="home__label" style={{ marginBottom: 8 }}>Create a new list</p>
           <div className="home__input-group">
             <input
