@@ -100,6 +100,7 @@ app.post('/verify-otp', async (c) => {
     sameSite: 'Strict',
     secure: process.env.NODE_ENV === 'production',
     path: '/',
+    maxAge: 60 * 60 * 24 * 365,
   })
 
   return c.json({ id: user.id, email: user.email })

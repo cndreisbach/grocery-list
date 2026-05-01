@@ -20,11 +20,11 @@ The system SHALL allow any visitor to initiate login by submitting their email a
 - **THEN** subsequent requests are rejected with an error and no email is sent
 
 ### Requirement: Verify OTP and create session
-The system SHALL verify a submitted 6-digit code against the stored OTP for the user. On success it SHALL create an indefinite session, set it as an HttpOnly cookie, mark the OTP as used, and redirect to the dashboard.
+The system SHALL verify a submitted 6-digit code against the stored OTP for the user. On success it SHALL create a session valid for 1 year, set it as an HttpOnly cookie, mark the OTP as used, and redirect to the dashboard.
 
 #### Scenario: Correct code submitted
 - **WHEN** a user submits the correct 6-digit code within its 10-minute window
-- **THEN** the system creates a session token, sets a `session` HttpOnly SameSite=Strict cookie, marks the OTP used, and redirects to the dashboard
+- **THEN** the system creates a session token, sets a `session` HttpOnly SameSite=Strict cookie with a 1-year expiry, marks the OTP used, and redirects to the dashboard
 
 #### Scenario: Incorrect code submitted
 - **WHEN** a user submits an incorrect code
