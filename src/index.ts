@@ -4,10 +4,13 @@ import listsRouter from './routes/lists'
 import itemsRouter from './routes/items'
 import eventsRouter from './routes/events'
 import membersRouter from './routes/members'
+import tokensRouter from './routes/tokens'
 import usersRouter from './routes/users'
 import authRouter from './routes/auth'
 import { storesRouter, storeTypesRouter } from './routes/stores'
+import tokenItemsRouter from './routes/tokenItems'
 import { requireAuth } from './middleware/auth'
+import { requireTokenAuth } from './middleware/tokenAuth'
 
 const app = new Hono()
 
@@ -24,9 +27,13 @@ app.route('/api/lists', listsRouter)
 app.route('/api/lists', itemsRouter)
 app.route('/api/lists', eventsRouter)
 app.route('/api/lists', membersRouter)
+app.route('/api/lists', tokensRouter)
 app.route('/api/users', usersRouter)
 app.route('/api/stores', storesRouter)
 app.route('/api/store-types', storeTypesRouter)
+
+app.use('/api/token/*', requireTokenAuth)
+app.route('/api/token', tokenItemsRouter)
 
 // Serve built React SPA in production
 app.get('*', async (c) => {

@@ -1,4 +1,4 @@
-import type { GroceryList, Item, Store, ListSummary, Member, User } from '../types'
+import type { GroceryList, Item, Store, ListSummary, Member, User, ApiToken, CreatedApiToken } from '../types'
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, {
@@ -100,4 +100,16 @@ export const api = {
 
   deleteList: (id: string) =>
     request<void>(`/api/lists/${id}`, { method: 'DELETE' }),
+
+  getTokens: (listId: string) =>
+    request<ApiToken[]>(`/api/lists/${listId}/tokens`),
+
+  createToken: (listId: string, name: string) =>
+    request<CreatedApiToken>(`/api/lists/${listId}/tokens`, {
+      method: 'POST',
+      body: JSON.stringify({ name }),
+    }),
+
+  revokeToken: (listId: string, tokenId: string) =>
+    request<void>(`/api/lists/${listId}/tokens/${tokenId}`, { method: 'DELETE' }),
 }

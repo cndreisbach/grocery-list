@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '../lib/api'
 import type { Member } from '../types'
+import TokensPanel from './TokensPanel'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -78,6 +79,8 @@ export default function MembersPanel({ listId, userRole }: { listId: string; use
           </button>
         </div>
       )}
+
+      {userRole === 'owner' && <TokensPanel listId={listId} />}
     </div>
   )
 }

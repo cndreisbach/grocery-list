@@ -752,3 +752,134 @@ a {
   padding: 8px 10px;
   font-size: 0.9rem;
 }
+
+/* Tokens panel */
+.tokens-panel {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+.tokens-panel__title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+}
+
+.tokens-panel__list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.tokens-panel__token {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tokens-panel__token .btn {
+  width: auto;
+  flex-shrink: 0;
+}
+
+.tokens-panel__token-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tokens-panel__token-name {
+  font-size: 0.95rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tokens-panel__token-last4 {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-family: monospace;
+}
+
+.tokens-panel__token-used {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.tokens-panel__empty {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  padding: 4px 0;
+}
+
+.tokens-panel__create {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tokens-panel__create .home__input-group {
+  margin-bottom: 0;
+}
+
+.tokens-panel__create-btn {
+  width: 100%;
+}
+
+@media (min-width: 480px) {
+  .tokens-panel__create {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .tokens-panel__create .home__input-group {
+    flex: 1;
+  }
+
+  .tokens-panel__create-btn {
+    width: auto;
+  }
+}
+
+.tokens-panel__reveal {
+  background: var(--color-bg);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tokens-panel__reveal-warning {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.tokens-panel__reveal-token {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tokens-panel__token-value {
+  flex: 1;
+  font-family: monospace;
+  font-size: 0.8rem;
+  word-break: break-all;
+  color: var(--color-text);
+}
+
+.tokens-panel__done-btn {
+  align-self: flex-end;
+}

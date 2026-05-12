@@ -52,3 +52,16 @@ export interface User {
   id: string
   email: string
 }
+
+export interface ApiToken {
+  id: string
+  name: string
+  last4: string
+  created_at: string
+  last_used_at: string | null
+}
+
+// Returned only at creation time — includes the full token value
+export interface CreatedApiToken extends ApiToken {
+  token: string
+}

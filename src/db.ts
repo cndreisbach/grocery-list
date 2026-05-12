@@ -588,6 +588,21 @@ if (user_version < 2) {
   db.exec('PRAGMA user_version = 2')
 }
 
+if (user_version < 3) {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS list_tokens (
+      id TEXT PRIMARY KEY,
+      token TEXT UNIQUE NOT NULL,
+      list_id TEXT NOT NULL REFERENCES lists(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      last4 TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      last_used_at DATETIME
+    )
+  `)
+  db.exec('PRAGMA user_version = 3')
+}
+
 export function adoptLegacyLists(userId: string, email: string) {
   db.prepare(`
     INSERT OR IGNORE INTO list_members (list_id, user_id, role)
@@ -600,6 +615,25 @@ export function getMemberRole(listId: string, userId: string): string | null {
     'SELECT role FROM list_members WHERE list_id = ? AND user_id = ?'
   ).get(listId, userId) as { role: string } | null
   return row?.role ?? null
+}
+
+export type TokenRow = {
+  id: string
+  list_id: string
+  name: string
+  last4: string
+  created_at: string
+  last_used_at: string | null
+}
+
+export function getTokenByValue(token: string): TokenRow | null {
+  return db.prepare(
+    'SELECT id, list_id, name, last4, created_at, last_used_at FROM list_tokens WHERE token = ?'
+  ).get(token) as TokenRow | null
+}
+
+export function updateTokenLastUsed(id: string) {
+  db.prepare('UPDATE list_tokens SET last_used_at = CURRENT_TIMESTAMP WHERE id = ?').run(id)
 }
 
 export default db
